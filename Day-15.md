@@ -99,25 +99,82 @@ order by employee_name
 ```
 ## 🧩 Question 4
 
-**Title:** 
+**Title:** In app purchases!! 
    
-**Link:** [🔗 Click to Open Problem]()  
+**Link:** [🔗 Click to Open Problem](https://my.newtonschool.co/playground/database/a3qluk6aq33c)  
 **Difficulty:** Medium 
 
 ```sql
 MySQL Solution: 
+WITH first_purchase AS (
+    SELECT
+        user_id,
+        min(created_at) AS start_date
+    FROM marketing_campaign
+    GROUP BY user_id
+),
+initial_products AS (
+    SELECT DISTINCT
+        mc.user_id,
+        mc.product_id
+    FROM marketing_campaign mc
+    JOIN first_purchase fp 
+    ON mc.user_id = fp.user_id 
+    AND mc.created_at = fp.start_date
+),
+subsequent_purchases AS (
+    SELECT
+        mc.user_id,
+        mc.product_id
+    from marketing_campaign mc
+    JOIN first_purchase fp 
+    ON mc.user_id = fp.user_id
+    WHERE mc.created_at > fp.start_date
+)
 
+SELECT 
+    count(distinct sp.user_id) as 'count(distinct user_id)'
+FROM subsequent_purchases sp
+left JOIN initial_products ip 
+ON sp.user_id = ip.user_id 
+AND sp.product_id = ip.product_id
+WHERE ip.product_id IS NULL
 ```
 ## 🧩 Question 5
 
-**Title:** 
+**Title:** Viewer but Streamer
    
-**Link:** [🔗 Click to Open Problem]()  
+**Link:** [🔗 Click to Open Problem](https://my.newtonschool.co/playground/database/0ext6olpamcu)  
 **Difficulty:** Medium 
 
 ```sql
 MySQL Solution:
- 
+with first_start as(
+    select 
+        user_id,
+        min(session_start) as start_date
+    from sessions
+    group by user_id
+),
+viewers_start as(
+    select 
+        s.user_id
+    from sessions s
+    join first_start fs
+    on s.session_start =fs.start_date
+    and session_type='viewer'
+)
+select 
+    s.user_id,
+    sum(case when session_type ='streamer' then 1 else 0 end ) as streamer_sessions
+from sessions s
+where s.user_id in (
+    select
+     v.user_id
+    from viewers_start v
+)
+group by s.user_id
+order by streamer_sessions desc,s.user_id asc 
 ```
 ## 🧩 Question 6
 
