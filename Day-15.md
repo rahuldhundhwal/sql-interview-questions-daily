@@ -178,58 +178,131 @@ order by streamer_sessions desc,s.user_id asc
 ```
 ## 🧩 Question 6
 
-**Title:** 
+**Title:** SQL- Revenue Generation - MySQL
    
-**Link:** [🔗 Click to Open Problem]()  
+**Link:** [🔗 Click to Open Problem](https://my.newtonschool.co/playground/database/siu0c0na7zof)  
 **Difficulty:** Medium 
 
 ```sql
 MySQL Solution:
- 
+ select 
+    *,
+    avg(revenue) over(
+        partition by region
+        order by sale_date
+        rows between 2 preceding and current row
+    ) as moving_average_revenue
+from Sales
+order by region,sale_date
 ```
 ## 🧩 Question 7
 
-**Title:** 
+**Title:** Advanced Stock Market Analysis Using Frames
    
-**Link:** [🔗 Click to Open Problem]()  
+**Link:** [🔗 Click to Open Problem](https://my.newtonschool.co/playground/database/4oxcxn3u7oiz)  
 **Difficulty:** Medium 
 
 ```sql
 MySQL Solution:
- 
+ select 
+    sp.PriceID,
+    c.CompanyName,
+    e.ExchangeName,
+    sp.TradeDate,
+    sp.ClosingPrice,
+    lag(sp.ClosingPrice) over(partition by sp.CompanyID order by sp.TradeDate) as PrevDayClosingPrice,
+    lead(sp.ClosingPrice) over(partition by sp.CompanyID order by sp.TradeDate) as NextDayClosingPrice,
+    ((sp.ClosingPrice)-(lag(sp.ClosingPrice) over(partition by sp.CompanyID order by sp.TradeDate))) as ClosingPriceDifference,
+    avg(sp.closingPrice) over(partition by sp.CompanyID order by sp.TradeDate rows between 2 preceding and current row) as ThreeDayMovingAvg,
+    sum(sp.Volume) over(partition by sp.CompanyID order by sp.TradeDate rows between 2 preceding and current row) as ThreeDayCumulativeVolume,
+    max(sp.ClosingPrice)  over(partition by sp.CompanyID order by sp.TradeDate rows between 2 preceding and current row) as HighestClosingPrice,
+    min(sp.ClosingPrice)  over(partition by sp.CompanyID order by sp.TradeDate rows between 2 preceding and current row) as LowestClosingPrice
+from 
+    StockPrices sp
+join Companies c
+on c.CompanyID =sp.CompanyID
+join Exchanges e
+on sp.ExchangeID=e.ExchangeID
+order by sp.CompanyID,sp.TradeDate
 ```
 ## 🧩 Question 8
 
-**Title:** 
+**Title:** Book Average Ratings
    
-**Link:** [🔗 Click to Open Problem]()  
+**Link:** [🔗 Click to Open Problem](https://my.newtonschool.co/playground/database/nkp6wj8vq2jh)  
 **Difficulty:** Medium 
 
 ```sql
 MySQL Solution:
- 
+select 
+    b.title as book_title,
+    a.name as author_name,
+    -- b.publish_year,
+    round(avg(b.rating) over(partition by b.publish_year order by b.publish_year),2) as avg_rating
+from book b 
+join authors a
+on b.author_id=a.id
+join book_review br
+on b.id=br.book_id
+order by b.title desc
 ```
 ## 🧩 Question 9
 
-**Title:** 
+**Title:** Calculate Moving Average Market Price 
    
-**Link:** [🔗 Click to Open Problem]()  
+**Link:** [🔗 Click to Open Problem](https://my.newtonschool.co/playground/database/5yagttp14ymu)  
 **Difficulty:** Medium 
 
 ```sql
 MySQL Solution:
- 
+select 
+    id,
+    mkt_price,
+    city,
+    avg(mkt_price) over(partition by city order by id rows between 2 preceding and current row) as moving_avg_price
+from zillow_transactions
+order by city
 ```
 ## 🧩 Question 10
 
-**Title:** 
+**Title:** Repeated Payments
    
-**Link:** [🔗 Click to Open Problem]()  
-**Difficulty:** Medium 
+**Link:** [🔗 Click to Open Problem](https://my.newtonschool.co/playground/database/545cdot6voow)  
+**Difficulty:** Hard 
 
 ```sql
 MySQL Solution:
- 
+ WITH
+  RankedTransactions AS (
+    SELECT
+      *,
+      ROW_NUMBER() OVER (
+        PARTITION BY
+          merchant_id,
+          credit_card_id,
+          amount
+        ORDER BY
+          transaction_timestamp
+      ) AS rn
+    FROM
+      transactions
+  ),
+  PairedTransactions AS (
+    SELECT
+      t1.transaction_id
+    FROM
+      RankedTransactions t1
+      JOIN RankedTransactions t2 ON t1.merchant_id = t2.merchant_id
+      AND t1.credit_card_id = t2.credit_card_id
+      AND t1.amount = t2.amount
+      AND t1.rn = t2.rn - 1 -- Join with the immediately preceding transaction in the sequence
+      AND TIMESTAMPDIFF(MINUTE, t1.transaction_timestamp, t2.transaction_timestamp) <= 10
+  )
+SELECT
+  COUNT(*) AS payment_count
+FROM
+  PairedTransactions;
+
 ```
 ---
 “Behind every dataset lies a decision — and every query is the key to unlocking it.”
