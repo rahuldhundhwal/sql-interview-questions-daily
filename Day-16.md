@@ -13,12 +13,27 @@
 
 ## 🧩 Question 1
 
-**Title:**    
-**Link:** [🔗 Click to Open Problem]()    
+**Title:** Business Trips
+   
+**Link:** [🔗 Click to Open Problem](https://my.newtonschool.co/playground/database/8uyfjrzwpi3p)    
 **Difficulty:** Medium  
 
 ```sql
-MySQL Solution: 
+MySQL Solution:
+with helper as(
+    select
+        purpose,
+        round(sum(miles) over(partition by purpose order by purpose),1) as total_miles
+    from trip_data
+    order by round(sum(miles) over(partition by purpose),1) desc
+)
+select 
+    purpose,
+    total_miles
+from helper
+group by purpose,total_miles
+order by total_miles desc
+limit 3
 ```
 ## 🧩 Question 2
 
